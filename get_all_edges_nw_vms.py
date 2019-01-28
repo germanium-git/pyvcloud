@@ -18,12 +18,13 @@ from pyvcloud.vcd.vm import VM
 from pyvcloud.vcd.vapp import VApp
 from prettytable import PrettyTable
 from termcolor import cprint
+import os
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Update with valid vCD's URL or IP address
-client = Client('10.20.30.40',
-                api_version='29.0',
+client = Client(os.environ['VCD_IP'],
+                api_version='31.0',
                 verify_ssl_certs=False,
                 log_file='pyvcloud.log',
                 log_requests=True,
@@ -31,7 +32,7 @@ client = Client('10.20.30.40',
                 log_bodies=True)
 
 # Update with valid administrator's credentials
-client.set_credentials(BasicLoginCredentials('administrator', 'SYSTEM', 'password'))
+client.set_credentials(BasicLoginCredentials(os.environ['VCD_USER'], 'SYSTEM', os.environ['VCD_PASSWORD']))
 
 
 # print(client.is_sysadmin())
@@ -41,7 +42,7 @@ orgs = client.get_org_list()
 
 # Iterate over Organizations - 1st GO to print table of Organizations
 orgtable = PrettyTable(["Organization name", "href"])
-for o in orgs.Org:
+for o in orgs:
     # print(o.attrib['name'])
     # print(o.get('name'))
     # print(o.get('href'))
@@ -50,7 +51,7 @@ cprint('Print all Organizations', 'yellow')
 print(orgtable)
 
 # Iterate over Organizations - 2nd GO to retrieve data about VDCs ---------------------------------
-for o in orgs.Org:
+for o in orgs:
     cprint('\nOrganization ' + o.attrib['name'] + ' ###################################################################'
                                                   '############################################', 'green')
     # print(o.get('name'))
