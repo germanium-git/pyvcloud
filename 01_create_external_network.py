@@ -1,3 +1,14 @@
+#!/usr/bin/env python3
+
+"""
+===================================================================================================
+   Author:          Petr Nemec
+   Description:     It creates the external network
+
+   Date:            2019-00-26
+===================================================================================================
+"""
+
 import requests
 
 from pyvcloud.vcd.client import BasicLoginCredentials

@@ -2,17 +2,10 @@
 
 """
 ===================================================================================================
-    Author:          Petr Nemec
-    Description:     It creates the isolated Org VDC network
+   Author:          Petr Nemec
+   Description:     It creates routed Org VDC network
 
-    Date:            2019-00-26
-
-
-    Tested with pyvcloud 20.0.2
-    There are some updated on https://github.com/vmware/pyvcloud/blob/master/pyvcloud/vcd/vdc.py
-
-
-    TODO DHCP service can't be disabled when new network is being deployed
+   Date:            2019-00-26
 ===================================================================================================
 """
 
@@ -29,7 +22,6 @@ from pyvcloud.vcd.vdc import VDC
 from tenantlib import handle_task
 
 from vcdconfig import Config
-
 
 # cfg = Config.load()
 cfg = Config.load(data='config_nogit.yml')
@@ -54,7 +46,6 @@ client.set_credentials(BasicLoginCredentials(cfg.vcd.sys_admin_username,
                                              cfg.vcd.sys_org_name,
                                              cfg.vcd.sys_admin_pass))
 
-
 # Ensure the org exists.
 print("Fetching org...")
 try:
@@ -78,26 +69,36 @@ except Exception:
     sys.exit()
 
 
-# Ensure Isolated Org Network doesn't exist.
+# Ensure the edge doesn't exist.
+print("Fetching Edges...")
+try:
+    edge_resource = vdc.get_gateway(cfg.org.edge_gateway.name)
+    print("Edge gateway already exists: {0}".format(cfg.org.edge_gateway.name))
+except Exception:
+    print("Edge gateway {0} does not exist, exiting".format(cfg.org.edge_gateway.name))
+    sys.exit()
+
+
+# Ensure Routed Org Network doesn't exist.
 print("Fetching Network...")
 try:
-    network_resource = vdc.get_isolated_orgvdc_network(cfg.org.org_isol_nw.name)
-    print("Network already exists: {0}".format(cfg.org.org_isol_nw.name))
+    network_resource = vdc.get_routed_orgvdc_network(cfg.org.org_routed_nw.name)
+    print("Network already exists: {0}".format(cfg.org.org_routed_nw.name))
 except Exception:
-    print("Network {0} does not exist, creating".format(cfg.org.org_isol_nw.name))
-    network_resource = vdc.create_isolated_vdc_network(network_name=cfg.org.org_isol_nw.name,
-                                                       gateway_ip=cfg.org.org_isol_nw.gateway,
-                                                       netmask=cfg.org.org_isol_nw.netmask,
-                                                       ip_range_start=cfg.org.org_isol_nw.ip_range_start,
-                                                       ip_range_end=cfg.org.org_isol_nw.ip_range_end,
-                                                       is_dhcp_enabled=cfg.org.org_isol_nw.is_dhcp_enabled,
-                                                       is_shared=cfg.org.org_isol_nw.is_shared)
+    print("Network {0} does not exist, creating".format(cfg.org.org_routed_nw.name))
+    network_resource = vdc.create_routed_vdc_network(cfg.org.org_routed_nw.name,
+                                                     cfg.org.edge_gateway.name,
+                                                     cfg.org.org_routed_nw.cidr,
+                                                     dns_suffix=cfg.org.org_routed_nw.dns_suffix,
+                                                     ip_range_start=cfg.org.org_routed_nw.ip_range_start,
+                                                     ip_range_end=cfg.org.org_routed_nw.ip_range_end,
+                                                     is_shared=cfg.org.org_routed_nw.is_shared,
+                                                     distributed_interface=cfg.org.org_routed_nw.distributed_interface)
 
     handle_task(client, network_resource.Tasks.Task[0])
 
-
 # Final report ------------------------------------------------------------------------------------
-new_isolated_network = vdc.get_isolated_orgvdc_network(cfg.org.org_isol_nw.name)
-print('\nNew Isolated network is created -------------------------------------------------')
-print('name: {}'.format(new_isolated_network.attrib['name']))
-print('href: {}'.format(new_isolated_network.attrib['href']))
+new_routed_network = vdc.get_routed_orgvdc_network(cfg.org.org_routed_nw.name)
+print('\nNew routed network is created -------------------------------------------------')
+print('name: {}'.format(new_routed_network.attrib['name']))
+print('href: {}'.format(new_routed_network.attrib['href']))
