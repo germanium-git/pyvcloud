@@ -1,7 +1,21 @@
-import yaml
-from collections import namedtuple
+#!/usr/bin/env python3
+
+"""
+===================================================================================================
+   Author:          Petr Nemec
+   Description:     Cleanup script to wipe out the components created by other scripts
+                    - isolated networks
+                    - routed network
+                    - edge gateway
+                    - external network
+
+   Date:            2019-00-26
+===================================================================================================
+"""
+
 import requests
 import sys
+import time
 
 from pyvcloud.vcd.client import BasicLoginCredentials
 from pyvcloud.vcd.client import Client
@@ -9,30 +23,10 @@ from pyvcloud.vcd.platform import Platform
 from pyvcloud.vcd.org import Org
 from pyvcloud.vcd.vdc import VDC
 
+from vcdconfig import Config
 
 # Private utility functions.
 from tenantlib import handle_task
-
-# Load the YAML configuration and convert to an object with properties for top-level entries.
-# Values must be dictionaries.
-class Config:
-    @classmethod
-    def load(self, data='config_nogit.yml'):
-        """Load YAML document"""
-
-        def convert_to_namedtuple(d):
-            """Convert a dict into a namedtuple"""
-            if not isinstance(d, dict):
-                raise ValueError("Can only convert dicts into namedtuple")
-            for k,v in d.items():
-                if isinstance(v, dict):
-                    d[k] = convert_to_namedtuple(v)
-            return namedtuple('ConfigDict', d.keys())(**d)
-
-        with open(data, 'r') as f:
-            yamlcfg = yaml.load(f)
-
-        return convert_to_namedtuple(yamlcfg)
 
 
 # cfg = Config.load()
@@ -90,6 +84,52 @@ try:
     vdc.delete_isolated_orgvdc_network(cfg.org.org_isol_nw.name)
 except Exception:
     print("The isolated network {0} does not exist.".format(cfg.org.org_isol_nw.name))
+
+
+# Ensure Routed Org Network doesn't exist and delete it. ------------------------------------------
+print("\nFetching the routed network {0} ...".format(cfg.org.org_routed_nw.name))
+try:
+    routed_network = vdc.get_routed_orgvdc_network(cfg.org.org_routed_nw.name)
+    print("The routed network {0} exists, deleting".format(cfg.org.org_routed_nw.name))
+    # print('name: {}'.format(routed_network.attrib['name']))
+    # print('href: {}'.format(routed_network.attrib['href']))
+    delete_nw = vdc.delete_routed_orgvdc_network(cfg.org.org_routed_nw.name)
+    # Test whether it's been deleted
+    i = 0
+    while i < 60:
+        obj = client.get_resource(delete_nw.attrib['href'])
+        if obj.attrib['status'] != 'success':
+            print(obj.attrib['status'])
+            i += 1
+            time.sleep(1)
+        else:
+            print("The network {0} doesn't exist".format(cfg.org.org_routed_nw.name))
+            i = 61
+
+except Exception:
+    print("The routed network {0} does not exist".format(cfg.org.org_routed_nw.name))
+
+
+# Ensure the Edge gateway doesn't exist and delete it. --------------------------------------------
+print("\nFetching Edges...")
+try:
+    network_resource = vdc.get_gateway(cfg.org.edge_gateway.name)
+    print("Edge gateway exists: {0}, deleting".format(cfg.org.edge_gateway.name))
+    delete_edge = vdc.delete_gateway(cfg.org.edge_gateway.name)
+    # Test whether it's been deleted
+    i = 0
+    while i < 60:
+        obj = client.get_resource(delete_edge.attrib['href'])
+        if obj.attrib['status'] != 'success':
+            print(obj.attrib['status'])
+            i += 1
+            time.sleep(1)
+        else:
+            print("The edge {0} doesn't exist".format(cfg.org.edge_gateway.name))
+            i = 61
+
+except Exception:
+    print("The Edge gateway {0} does not exist".format(cfg.org.edge_gateway.name))
 
 
 # Create an instance of the Class Platform --------------------------------------------------------

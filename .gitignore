@@ -2,3 +2,5 @@
 .idea
 pyvcloud.log
 config_nogit.yml
+test*
+

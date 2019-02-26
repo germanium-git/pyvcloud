@@ -35,11 +35,19 @@ org:
 # Specify the resources to be created/deleted
   name: org-name
   vdc_name: vdc-name
-  edge_name:  edge-name
+  edge_gateway:
+    name: edge-name
   mng_nw:  mng-nw
-  org_routed_nw:  org-nw
+  org_routed_nw:
+    name: DEMO-10.0.1.0m24
+    cidr: 10.0.1.1/24
+    dns_suffix: vmlab.local
+    ip_range_start: 10.0.1.10
+    ip_range_end: 10.0.1.254
+    is_shared:  True
+    distributed_interface: True
   org_isol_nw:
-    name: isol-nw
+    name: ISOLNW-11.22.33.0m24
     network_cidr:  11.22.33.1
     netmask:  11.22.33.1
     ip_range_start: 11.22.33.10
