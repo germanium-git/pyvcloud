@@ -48,9 +48,13 @@ org:
     distributed_interface: True
   org_isol_nw:
     name: ISOLNW-11.22.33.0m24
-    network_cidr:  11.22.33.1
+    cidr:  11.22.33.1/24
     netmask:  11.22.33.1
     ip_range_start: 11.22.33.10
     ip_range_end: 11.22.33.254
     is_dhcp_enabled:  False
+    is_shared:  True
+  org_direct_nw:
+    name: DIRNW-22.44.66.0m24
+    parent_network: EXTNW-22.44.66.0m24
     is_shared:  True

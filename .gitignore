@@ -1,6 +1,7 @@
 # Created by .ignore support plugin (hsz.mobi)
 .idea
+# fresh copy of github repository
+pyvcloud/*
 pyvcloud.log
 config_nogit.yml
 test*
-

@@ -3,7 +3,7 @@
 """
 ===================================================================================================
     Author:          Petr Nemec
-    Description:     It creates the isolated Org VDC network
+    Description:     It creates the direct Org VDC network
 
     Date:            2019-00-26
 
@@ -11,8 +11,6 @@
     Tested with pyvcloud 20.0.2
     There are some updated on https://github.com/vmware/pyvcloud/blob/master/pyvcloud/vcd/vdc.py
 
-
-    TODO DHCP service can't be disabled when new network is being deployed
 ===================================================================================================
 """
 
@@ -80,26 +78,22 @@ except Exception:
     sys.exit()
 
 
-# Ensure Isolated Org Network doesn't exist.
+# Ensure Direct Org Network doesn't exist.
 print("Fetching Network...")
 try:
-    network_resource = vdc.get_isolated_orgvdc_network(cfg.org.org_isol_nw.name)
-    print("Network already exists: {0}".format(cfg.org.org_isol_nw.name))
+    network_resource = vdc.get_direct_orgvdc_network(cfg.org.org_direct_nw.name)
+    print("Network already exists: {0}".format(cfg.org.org_direct_nw.name))
 except Exception:
-    print("Network {0} does not exist, creating".format(cfg.org.org_isol_nw.name))
-    network_resource = vdc.create_isolated_vdc_network(network_name=cfg.org.org_isol_nw.name,
-                                                       gateway_ip=cfg.org.org_isol_nw.gateway,
-                                                       netmask=cfg.org.org_isol_nw.netmask,
-                                                       ip_range_start=cfg.org.org_isol_nw.ip_range_start,
-                                                       ip_range_end=cfg.org.org_isol_nw.ip_range_end,
-                                                       is_dhcp_enabled=cfg.org.org_isol_nw.is_dhcp_enabled,
-                                                       is_shared=cfg.org.org_isol_nw.is_shared)
+    print("Network {0} does not exist, creating".format(cfg.org.org_direct_nw.name))
+    network_res = vdc.create_directly_connected_vdc_network(network_name=cfg.org.org_direct_nw.name,
+                                                            parent_network_name=cfg.org.org_direct_nw.parent_network,
+                                                            is_shared=cfg.org.org_direct_nw.is_shared)
 
-    handle_task(client, network_resource.Tasks.Task[0])
+    handle_task(client, network_res.Tasks.Task[0])
 
 
 # Final report ------------------------------------------------------------------------------------
-new_isolated_network = vdc.get_isolated_orgvdc_network(cfg.org.org_isol_nw.name)
-print('\nNew Isolated network is created -------------------------------------------------')
-print('name: {}'.format(new_isolated_network.attrib['name']))
-print('href: {}'.format(new_isolated_network.attrib['href']))
+new_direct_network = vdc.get_direct_orgvdc_network(cfg.org.org_direct_nw.name)
+print('\nNew Direct network is created -------------------------------------------------')
+print('name: {}'.format(new_direct_network.attrib['name']))
+print('href: {}'.format(new_direct_network.attrib['href']))
